@@ -1,0 +1,89 @@
+<?php
+
+/**
+ * @file
+ * Responsify menus in Drupal.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function responsive_menus_menu() {
+  $items = array();
+
+  $items['admin/config/user-interface/responsive_menus'] = array(
+    'title' => 'Responsive Menus',
+    'description' => 'Settings for Responsive Menus module',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('responsive_menus_admin_form'),
+    'access arguments' => array('administer responsive menus'),
+  );
+
+  return $items;
+}
+
+/**
+ * Admin settings form for which menus to responsify.
+ */
+function responsive_menus_admin_form($form, &$form_state) {
+  $form['responsive_menus_css_selectors'] = array(
+    '#type' => 'textarea',
+    '#title' => t('CSS selectors for which menus to responsify'),
+    '#default_value' => variable_get('responsive_menus_css_selectors', '.main-menu'),
+    '#description' => 'Enter CSS selectors of menus to responsify.  Comma separated or 1 per line',
+  );
+  $form['responsive_menus_style'] = array(
+    '#type' => 'select',
+    '#title' => t('Responsive menu style'),
+    '#options' => array('responsive_menus_simple' => 'Simple 3-bar (☰) expanding'),
+    '#description' => '<small>More options to come.  Submit your suggestions!</small>',
+  );
+  $form['responsive_menus_media_size'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Screen width to respond to'),
+    '#default_value' => variable_get('responsive_menus_media_size', 768),
+    '#description' => 'Width in pixels when we swap out responsive menu e.g. 768',
+  );
+
+  return system_settings_form($form);
+}
+
+/**
+ * Return array of selectors for JS settings.
+ *
+ * @return array
+ *   Array of settings to pass with drupal_add_js().
+ */
+function responsive_menus_build_selectors() {
+  $selectors = variable_get('responsive_menus_css_selectors', '.main-menu');
+  $js_settings = array();
+  $delimiter = ', ';
+  // Strip out carriage returns.
+  $selectors = str_replace("\r", '', $selectors);
+  // Replace new lines with delimiter.
+  $selectors = str_replace("\n", $delimiter, $selectors);
+  // Explode to include original delimited.
+  $values = explode($delimiter, $selectors);
+  $values = array_filter($values);
+  $js_settings['css_selectors'] = $values;
+
+  return $js_settings;
+}
+
+/**
+ * Implements hook_init().
+ */
+function responsive_menus_init() {
+  $style = variable_get('responsive_menus_style', 'responsive_menus_simple');
+  $js_settings = array();
+  // @todo Will do libraries lookup later when other responsive styles added.
+  $included_libraries = array('responsive_menus_simple');
+  if (in_array($style, $included_libraries)) {
+    drupal_add_css(drupal_get_path('module', 'responsive_menus') . "/css/{$style}.css");
+    drupal_add_js(drupal_get_path('module', 'responsive_menus') . "/js/{$style}.js");
+  }
+  // Add selectors to JS settings.
+  $js_settings += responsive_menus_build_selectors();
+  $js_settings['media_size'] = variable_get('responsive_menus_media_size', 768);
+  drupal_add_js(array('responsive_menus' => $js_settings), 'setting');
+}
