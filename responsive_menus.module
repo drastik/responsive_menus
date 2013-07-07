@@ -23,6 +23,18 @@ function responsive_menus_menu() {
 }
 
 /**
+ * Implements hook_permission().
+ */
+function responsive_menus_permission() {
+  return array(
+    'administer responsive menus' =>  array(
+      'title' => t('Administer Responsive Menus'),
+      'description' => t('Configure settings for responsive menus module.'),
+    ),
+  );
+}
+
+/**
  * Admin settings form for which menus to responsify.
  */
 function responsive_menus_admin_form($form, &$form_state) {
@@ -35,17 +47,39 @@ function responsive_menus_admin_form($form, &$form_state) {
   $form['responsive_menus_style'] = array(
     '#type' => 'select',
     '#title' => t('Responsive menu style'),
-    '#options' => array('responsive_menus_simple' => 'Simple 3-bar (☰) expanding'),
+    '#options' => array(
+      'responsive_menus_simple' => t("Simple 3-bar (!bars) expanding.", array('!bars' => '☰')),
+    ),
     '#description' => '<small>More options to come.  Submit your suggestions!</small>',
   );
   $form['responsive_menus_media_size'] = array(
     '#type' => 'textfield',
     '#title' => t('Screen width to respond to'),
+    '#size' => 10,
     '#default_value' => variable_get('responsive_menus_media_size', 768),
     '#description' => 'Width in pixels when we swap out responsive menu e.g. 768',
   );
+  $form['responsive_menus_ignore_admin'] = array(
+    '#type' => 'checkboxes',
+    '#options' => array(1 => t('Ignore admin pages?')),
+    '#default_value' => variable_get('responsive_menus_ignore_admin', array(1 => 1)),
+  );
 
   return system_settings_form($form);
+}
+
+/**
+ * Implements hook_help().
+ */
+function responsive_menus_help($path, $arg) {
+  switch ($path) {
+    // On the help overview page.
+    case 'admin/help#responsive_menus':
+      return '<p>' . t('Responsify your menus! Using any jQuery compatible selector, make elements mobile friendly. Technically you could use this on more than menus... The <a href="@admin">administration page</a> provides settings to control which menus to control, what screen size to react to, and a few other options.', array('@admin' => url('admin/config/user-interface/responsive_menus'))) . '</p>';
+    // On the admin settings page.
+    case 'admin/config/user-interface/responsive_menus':
+      return '<p>' . t('This page provides configuration options for responsive menus. You may configure any amount of menus to respond to any screen size by simply adding a jQuery compatible selector to the list below. There is also an option to ignore admin pages where you might not want responsive menus.') . '</p>';
+  }
 }
 
 /**
@@ -74,6 +108,10 @@ function responsive_menus_build_selectors() {
  * Implements hook_init().
  */
 function responsive_menus_init() {
+  $ignore_admin = variable_get('responsive_menus_ignore_admin', array(1 => 1));
+  if ($ignore_admin[1] && path_is_admin(current_path())) {
+    return;
+  }
   $style = variable_get('responsive_menus_style', 'responsive_menus_simple');
   $js_settings = array();
   // @todo Will do libraries lookup later when other responsive styles added.
