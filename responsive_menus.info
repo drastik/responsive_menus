@@ -2,5 +2,4 @@ name = Responsive Menus
 description = Responsify any menu using CSS Selectors.
 package = User interface
 core = 7.x
-files[] = responsive_menus.module
 configure = admin/config/user-interface/responsive_menus

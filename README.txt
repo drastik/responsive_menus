@@ -14,6 +14,7 @@ That said, there are plenty of configuration options at:
 
 These options include:
 -CSS selectors for which menus to responsify
+-Text or HTML to use as the menu toggle button
 -Responsive menu style (will include nifty 3rd party solutions later)
 -Screen width to respond to
 
