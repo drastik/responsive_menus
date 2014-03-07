@@ -1,7 +1,9 @@
-/**
- * jQuery meanMenu v2.0
- * Copyright (C) 2012-2013 Chris Wharton (themes@meanthemes.com)
+/*!
+ * jQuery meanMenu v2.0.6 (Drupal Responsive Menus version)
+ * @Copyright (C) 2012-2013 Chris Wharton (https://github.com/weare2ndfloor/meanMenu)
  *
+ */
+/*
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -23,9 +25,11 @@
  *
  */
 (function ($) {
+	"use strict";
     $.fn.meanmenu = function (options) {
         var defaults = {
             meanMenuTarget: jQuery(this), // Target the current HTML markup you wish to replace
+            meanMenuContainer: 'body', // Choose where meanmenu will be placed within the HTML
             meanMenuClose: "X", // single character you want to represent the close menu button
             meanMenuCloseSize: "18px", // set font size of close button
             meanMenuOpen: "<span /><span /><span />", // text/markup you want when menu is closed
@@ -39,16 +43,22 @@
             meanExpandableChildren: true, // true to allow expand/collapse children
             meanExpand: "+", // single character you want to represent the expand for ULs
             meanContract: "-", // single character you want to represent the contract for ULs
-            meanRemoveAttrs: false // true to remove classes and IDs, false to keep them
+            meanRemoveAttrs: false, // true to remove classes and IDs, false to keep them
+            onePage: false, // set to true for one page sites
+            removeElements: "" // set to hide page elements
         };
         var options = $.extend(defaults, options);
 
         // get browser width
-        currentWidth = window.innerWidth || document.documentElement.clientWidth;
+        var currentWidth = document.documentElement.clientWidth || document.body.clientWidth;
 
         return this.each(function () {
             var meanMenu = options.meanMenuTarget;
-            var meanReveal = options.meanReveal;
+            // For Drupal, track the original menu, but make a clone and remove
+            // ul.contextual links for removal of the responsive version.
+            var meanMenuClone = options.meanMenuTarget.clone();
+            meanMenuClone.find('.contextual-links-wrapper').remove().find('ul.contextual-links').remove();
+            var meanContainer = options.meanMenuContainer;
             var meanMenuClose = options.meanMenuClose;
             var meanMenuCloseSize = options.meanMenuCloseSize;
             var meanMenuOpen = options.meanMenuOpen;
@@ -59,11 +69,13 @@
             var meanScreenWidth = options.meanScreenWidth;
             var meanNavPush = options.meanNavPush;
             var meanRevealClass = ".meanmenu-reveal";
-            meanShowChildren = options.meanShowChildren;
-            meanExpandableChildren = options.meanExpandableChildren;
+            var meanShowChildren = options.meanShowChildren;
+            var meanExpandableChildren = options.meanExpandableChildren;
             var meanExpand = options.meanExpand;
             var meanContract = options.meanContract;
             var meanRemoveAttrs = options.meanRemoveAttrs;
+            var onePage = options.onePage;
+            var removeElements = options.removeElements;
 
             //detect known mobile/tablet usage
             if ( (navigator.userAgent.match(/iPhone/i)) || (navigator.userAgent.match(/iPod/i)) || (navigator.userAgent.match(/iPad/i)) || (navigator.userAgent.match(/Android/i)) || (navigator.userAgent.match(/Blackberry/i)) || (navigator.userAgent.match(/Windows Phone/i)) ) {
@@ -77,7 +89,7 @@
 
             function meanCentered() {
             	if (meanRevealPosition == "center") {
-	            	var newWidth = window.innerWidth || document.documentElement.clientWidth;
+	            	var newWidth = document.documentElement.clientWidth || document.body.clientWidth;
 	            	var meanCenter = ( (newWidth/2)-22 )+"px";
 	            	meanRevealPos = "left:" + meanCenter + ";right:auto;";
 
@@ -91,20 +103,21 @@
             	}
             }
 
-            menuOn = false;
-            meanMenuExist = false;
+            var menuOn = false;
+            var meanMenuExist = false;
 
             if (meanRevealPosition == "right") {
                 meanRevealPos = "right:" + meanRevealPositionDistance + ";left:auto;";
             }
             if (meanRevealPosition == "left") {
-                meanRevealPos = "left:" + meanRevealPositionDistance + ";right:auto;";
+                var meanRevealPos = "left:" + meanRevealPositionDistance + ";right:auto;";
             }
             // run center function
             meanCentered();
 
             // set all styles for mean-reveal
-            meanStyles = "background:"+meanRevealColour+";color:"+meanRevealColour+";"+meanRevealPos;
+            var meanStyles = "background:"+meanRevealColour+";color:"+meanRevealColour+";"+meanRevealPos;
+			var $navreveal = "";
 
             function meanInner() {
                 // get last class name
@@ -118,27 +131,29 @@
             //re-instate original nav (and call this on window.width functions)
             function meanOriginal() {
             	jQuery('.mean-bar,.mean-push').remove();
-            	jQuery('body').removeClass("mean-container");
+            	jQuery(meanContainer).removeClass("mean-container");
             	jQuery(meanMenu).show();
             	menuOn = false;
             	meanMenuExist = false;
+            	jQuery(removeElements).removeClass('mean-remove');
             }
 
             //navigation reveal
             function showMeanMenu() {
                 if (currentWidth <= meanScreenWidth) {
+		            jQuery(removeElements).addClass('mean-remove');
                 	meanMenuExist = true;
                 	// add class to body so we don't need to worry about media queries here, all CSS is wrapped in '.mean-container'
-                	jQuery('body').addClass("mean-container");
+                	jQuery(meanContainer).addClass("mean-container");
                 	jQuery('.mean-container').prepend('<div class="mean-bar"><a href="#nav" class="meanmenu-reveal" style="'+meanStyles+'">Show Navigation</a><nav class="mean-nav"></nav></div>');
 
                     //push meanMenu navigation into .mean-nav
-                    var meanMenuContents = jQuery(meanMenu).html();
+                    var meanMenuContents = jQuery(meanMenuClone).html();
                     jQuery('.mean-nav').html(meanMenuContents);
 
             		// remove all classes from EVERYTHING inside meanmenu nav
             		if(meanRemoveAttrs) {
-            			jQuery('nav.mean-nav *').each(function() {
+            			jQuery('nav.mean-nav ul, nav.mean-nav ul *').each(function() {
             				jQuery(this).removeAttr("class");
             				jQuery(this).removeAttr("id");
             			});
@@ -172,13 +187,10 @@
 		                       		e.preventDefault();
 		                       	   if (jQuery(this).hasClass("mean-clicked")) {
 		                       	   		jQuery(this).text(meanExpand);
-		                               jQuery(this).prev('ul').slideUp(300, function(){
-
-		                               });
+		                               jQuery(this).prev('ul').slideUp(300, function(){});
 		                           } else {
 		                           		jQuery(this).text(meanContract);
-		                           		jQuery(this).prev('ul').slideDown(300, function(){
-		                           		});
+		                           		jQuery(this).prev('ul').slideDown(300, function(){});
 		                           }
 		                           jQuery(this).toggleClass("mean-clicked");
 		                       });
@@ -195,7 +207,7 @@
                     $navreveal.removeClass("meanclose");
                     jQuery($navreveal).click(function(e){
                     	e.preventDefault();
-	            		if(menuOn == false) {
+	            		if( menuOn == false ) {
 	                        $navreveal.css("text-align", "center");
 	                        $navreveal.css("text-indent", "0");
 	                        $navreveal.css("font-size", meanMenuCloseSize);
@@ -207,7 +219,20 @@
 	                    }
                         $navreveal.toggleClass("meanclose");
                         meanInner();
+                        jQuery(removeElements).addClass('mean-remove');
                     });
+
+                    // for one page websites, reset all variables...
+                    if ( onePage ) {
+
+						jQuery('.mean-nav ul > li > a:first-child').on( "click" , function () {
+							jQuery('.mean-nav ul:first').slideUp();
+							menuOn = false;
+							jQuery($navreveal).toggleClass("meanclose").html(meanMenuOpen);
+
+						});
+
+                    }
 
                 } else {
                 	meanOriginal();
@@ -217,7 +242,7 @@
             if (!isMobile) {
                 //reset menu on resize above meanScreenWidth
                 jQuery(window).resize(function () {
-                    currentWidth = window.innerWidth || document.documentElement.clientWidth;
+                    currentWidth = document.documentElement.clientWidth || document.body.clientWidth;
                     if (currentWidth > meanScreenWidth) {
                         meanOriginal();
                     } else {
@@ -236,7 +261,7 @@
             window.onorientationchange = function() {
             	meanCentered();
             	// get browser width
-            	currentWidth = window.innerWidth || document.documentElement.clientWidth;
+            	currentWidth = document.documentElement.clientWidth || document.body.clientWidth;
             	if (currentWidth >= meanScreenWidth) {
             		meanOriginal();
             	}

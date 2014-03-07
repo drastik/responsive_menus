@@ -4,6 +4,11 @@
  */
 
 /* Responsive mode, engage! */
+.responsive-menus.responsified {
+  clear: both;
+  width: 100%;
+}
+
 .responsive-menus.responsified span.toggler {
   padding: 1px;
   display: block;
@@ -32,16 +37,25 @@
   box-shadow: 2px 2px 2px #000;
 }
 
-.responsive-menus.responsified.responsive-toggled .responsive-menus-simple {
+.responsive-menus.responsified.responsive-toggled .responsive-menus-simple,
+.responsive-menus.responsified.responsive-toggled .responsive-menus-simple ul {
   display: block;
+  padding: 0;
+  margin: 0;
+}
+
+.responsive-menus.responsified.responsive-toggled.absolute {
+  position: relative;
+  z-index: 999;
 }
 
 .responsive-menus.responsified.responsive-toggled.absolute .responsive-menus-simple {
   position: absolute;
   z-index: 999;
+  top: auto;
 }
 
-.responsive-menus.responsified ul.responsive-menus-simple li {
+.responsive-menus.responsified .responsive-menus-simple li {
   width: 100%;
   display: block;
   padding: 0;
@@ -50,7 +64,7 @@
   list-style: none;
 }
 
-.responsive-menus.responsified ul.responsive-menus-simple li a {
+.responsive-menus.responsified .responsive-menus-simple li a {
   color: #fff;
   display: block;
   padding: 1em 5%;
@@ -63,19 +77,19 @@
   text-transform: uppercase;
 }
 
-.responsive-menus.responsified ul.responsive-menus-simple>li.last a {
+.responsive-menus.responsified .responsive-menus-simple>li.last a {
   border-bottom: none;
 }
 
-.responsive-menus.responsified ul.responsive-menus-simple li ul li a {
+.responsive-menus.responsified .responsive-menus-simple li ul li a {
   padding: 1em 0 1em 10%;
 }
 
-.responsive-menus.responsified ul.responsive-menus-simple li ul li ul li a {
+.responsive-menus.responsified .responsive-menus-simple li ul li ul li a {
   padding: 1em 0 1em 15%;
 }
 
-.responsive-menus.responsified ul.responsive-menus-simple li ul {
+.responsive-menus.responsified .responsive-menus-simple li ul {
   display: block !important;
   visibility: visible !important;
   margin: 0;
